@@ -480,56 +480,24 @@ object SamplePuzzles {
 
     private fun buildSolutionTree(correctSequence: List<Move>, description: String): MoveNode {
         if (correctSequence.isEmpty()) {
-            return MoveNode(null, true, emptyList(), hint = description)
+            return MoveNode(null, true, emptyList<MoveNode>(), hint = description)
         }
 
-        var currentNode: MoveNode? = null
-        for ((index, move) in correctSequence.withIndex()) {
-            val isLast = index == correctSequence.size - 1
-            val node = MoveNode(
+        // Build chain from end to start
+        var child: MoveNode? = null
+        for (i in correctSequence.indices.reversed()) {
+            val move = correctSequence[i]
+            val isLast = (i == correctSequence.size - 1)
+            val children = if (child != null) listOf(child) else emptyList<MoveNode>()
+            child = MoveNode(
                 move = move,
                 isCorrect = true,
-                children = if (isLast) emptyList() else listOf(MoveNode(null, true, emptyList())),
+                children = children,
                 hint = if (isLast) description else null,
                 comment = if (isLast) description else null
             )
-            if (currentNode == null) {
-                currentNode = node
-            }
         }
 
-        // Build tree structure properly
-        var root: MoveNode? = null
-        correctSequence.forEachIndexed { index, move ->
-            val isCorrect = true
-            val children = if (index < correctSequence.size - 1) {
-                mutableListOf()
-            } else {
-                emptyList()
-            }
-            val node = MoveNode(
-                move = move,
-                isCorrect = isCorrect,
-                children = children,
-                hint = if (index == correctSequence.size - 1) description else null
-            )
-
-            if (root == null) {
-                root = node
-            } else {
-                // Find the last leaf and add this node as child
-                var parent = root
-                repeat(index - 1) {
-                    parent = parent?.children?.firstOrNull()
-                }
-                parent?.let {
-                    val mutableChildren = it.children.toMutableList()
-                    mutableChildren.add(node)
-                    // Note: In real implementation, we'd need immutable copy
-                }
-            }
-        }
-
-        return root ?: MoveNode(null, true, emptyList(), hint = description)
+        return child ?: MoveNode(null, true, emptyList<MoveNode>(), hint = description)
     }
 }

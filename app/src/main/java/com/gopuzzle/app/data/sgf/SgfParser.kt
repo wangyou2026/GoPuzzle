@@ -29,8 +29,7 @@ class SgfParser {
                 val node = parseNode(sgf, i)
                 if (node != null) {
                     i = node.second
-                    root.properties.putAll(node.first)
-                    root.children.addAll(node.first.children)
+                    root.properties.putAll(node.first.properties)
                 }
             } else {
                 i++

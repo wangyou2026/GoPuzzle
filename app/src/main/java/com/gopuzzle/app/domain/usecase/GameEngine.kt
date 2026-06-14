@@ -47,7 +47,7 @@ class GameEngine(private val board: Board) {
         capturedStones.forEach { board.setStone(it, Stone.EMPTY) }
 
         // 检查自杀（简单处理：检查自己是否有气）
-        if (capturedStones.isEmpty) {
+        if (capturedStones.isEmpty()) {
             val ownGroup = findGroup(point)
             if (ownGroup.isDead) {
                 // 自杀，禁止
