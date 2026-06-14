@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">围棋死活训练</string>
+    <string name="start_practice">开始做题</string>
+    <string name="wrong_questions">错题本</string>
+    <string name="favorites">收藏夹</string>
+    <string name="statistics">统计</string>
+    <string name="settings">设置</string>
+    <string name="hint">提示</string>
+    <string name="reset">重置</string>
+    <string name="undo">悔棋</string>
+    <string name="answer">答案</string>
+    <string name="correct">正确！</string>
+    <string name="incorrect">错误</string>
+    <string name="puzzle_complete">题目完成</string>
+    <string name="select_category">选择分类</string>
+    <string name="life_and_death">死活题</string>
+    <string name="tesuji">手筋题</string>
+    <string name="yose">官子题</string>
+    <string name="beginner">入门</string>
+    <string name="intermediate">中级</string>
+    <string name="advanced">高级</string>
+</resources>
