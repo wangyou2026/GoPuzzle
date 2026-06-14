@@ -153,64 +153,42 @@ private fun DrawScope.drawStarPoints(boardSize: Int, padding: Float, cellSize: F
 }
 
 private fun DrawScope.drawCoordinates(boardSize: Int, padding: Float, cellSize: Float) {
-    val textColor = Color(0xFF8B4513)
-    val textSize = 10.dp.toPx()
+    val labelTextSize = 10.dp.toPx()
+    val nativeCanvas: android.graphics.Canvas = drawContext.canvas.nativeCanvas
 
     // Draw column labels (A-T, skipping I)
     val cols = "ABCDEFGHJKLMNOPQRST"
     for (i in 0 until min(boardSize, 19)) {
         val x = padding + i * cellSize
-        val label = cols.getOrElse(i) { (i + 1).toString() }
+        val colLabel = cols.getOrNull(i)?.toString() ?: (i + 1).toString()
+
+        val paint = android.graphics.Paint().apply {
+            this.color = android.graphics.Color.parseColor("#8B4513")
+            this.textSize = labelTextSize
+            this.textAlign = android.graphics.Paint.Align.CENTER
+        }
+
         // Draw at top
-        drawContext.canvas.nativeCanvas.drawText(
-            label,
-            x,
-            padding - 12.dp.toPx(),
-            android.graphics.Paint().apply {
-                color = android.graphics.Color.parseColor("#8B4513")
-                textSize = textSize
-                textAlign = android.graphics.Paint.Align.CENTER
-            }
-        )
+        nativeCanvas.drawText(colLabel, x, padding - 12.dp.toPx(), paint)
         // Draw at bottom
-        drawContext.canvas.nativeCanvas.drawText(
-            label,
-            x,
-            padding + (boardSize - 1) * cellSize + 20.dp.toPx(),
-            android.graphics.Paint().apply {
-                color = android.graphics.Color.parseColor("#8B4513")
-                textSize = textSize
-                textAlign = android.graphics.Paint.Align.CENTER
-            }
-        )
+        nativeCanvas.drawText(colLabel, x, padding + (boardSize - 1) * cellSize + 20.dp.toPx(), paint)
     }
 
     // Draw row labels (1-19)
     for (i in 0 until min(boardSize, 19)) {
         val y = padding + i * cellSize
-        val label = (boardSize - i).toString()
+        val rowLabel = (boardSize - i).toString()
+
+        val paint = android.graphics.Paint().apply {
+            this.color = android.graphics.Color.parseColor("#8B4513")
+            this.textSize = labelTextSize
+            this.textAlign = android.graphics.Paint.Align.CENTER
+        }
+
         // Draw on left
-        drawContext.canvas.nativeCanvas.drawText(
-            label,
-            padding - 12.dp.toPx(),
-            y + textSize / 3,
-            android.graphics.Paint().apply {
-                color = android.graphics.Color.parseColor("#8B4513")
-                textSize = textSize
-                textAlign = android.graphics.Paint.Align.CENTER
-            }
-        )
+        nativeCanvas.drawText(rowLabel, padding - 12.dp.toPx(), y + labelTextSize / 3, paint)
         // Draw on right
-        drawContext.canvas.nativeCanvas.drawText(
-            label,
-            padding + (boardSize - 1) * cellSize + 12.dp.toPx(),
-            y + textSize / 3,
-            android.graphics.Paint().apply {
-                color = android.graphics.Color.parseColor("#8B4513")
-                textSize = textSize
-                textAlign = android.graphics.Paint.Align.CENTER
-            }
-        )
+        nativeCanvas.drawText(rowLabel, padding + (boardSize - 1) * cellSize + 12.dp.toPx(), y + labelTextSize / 3, paint)
     }
 }
 
