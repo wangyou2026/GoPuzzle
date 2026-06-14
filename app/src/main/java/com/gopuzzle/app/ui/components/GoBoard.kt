@@ -9,11 +9,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.gopuzzle.app.domain.model.Board
@@ -22,6 +21,7 @@ import com.gopuzzle.app.domain.model.Stone
 import com.gopuzzle.app.domain.model.StonePlacement
 import com.gopuzzle.app.ui.theme.*
 import kotlin.math.min
+import kotlin.math.sqrt
 
 @Composable
 fun GoBoard(
@@ -46,7 +46,13 @@ fun GoBoard(
             .pointerInput(enabled, boardSize) {
                 if (enabled && onStoneClick != null) {
                     detectTapGestures { offset ->
-                        val point = calculatePointFromOffset(offset, size.width.toFloat(), size.height.toFloat(), boardSize)
+                        val point = calculatePointFromOffset(
+                            offset,
+                            size.width.toFloat(),
+                            size.height.toFloat(),
+                            boardSize,
+                            this@pointerInput.density
+                        )
                         point?.let { onStoneClick(it) }
                     }
                 }
@@ -66,7 +72,7 @@ fun GoBoard(
         // Draw grid lines
         drawGrid(boardSize, padding, cellSize)
 
-        // Draw star points (星位)
+        // Draw star points
         drawStarPoints(boardSize, padding, cellSize)
 
         // Draw coordinates
@@ -92,26 +98,24 @@ fun GoBoard(
 private fun DrawScope.drawGrid(boardSize: Int, padding: Float, cellSize: Float) {
     val gridColor = Color(0xFF8B4513)
 
-    // Draw vertical lines
     for (i in 0 until boardSize) {
         val x = padding + i * cellSize
         drawLine(
             color = gridColor,
             start = Offset(x, padding),
             end = Offset(x, padding + (boardSize - 1) * cellSize),
-            strokeWidth = 1.5.dp.toPx(),
+            strokeWidth = 1.5f.dp.toPx(),
             cap = StrokeCap.Round
         )
     }
 
-    // Draw horizontal lines
     for (i in 0 until boardSize) {
         val y = padding + i * cellSize
         drawLine(
             color = gridColor,
             start = Offset(padding, y),
             end = Offset(padding + (boardSize - 1) * cellSize, y),
-            strokeWidth = 1.5.dp.toPx(),
+            strokeWidth = 1.5f.dp.toPx(),
             cap = StrokeCap.Round
         )
     }
@@ -119,20 +123,15 @@ private fun DrawScope.drawGrid(boardSize: Int, padding: Float, cellSize: Float) 
 
 private fun DrawScope.drawStarPoints(boardSize: Int, padding: Float, cellSize: Float) {
     val starPointRadius = when {
-        boardSize == 9 -> 4.dp.toPx()
-        boardSize == 13 -> 3.5.dp.toPx()
-        boardSize == 19 -> 3.dp.toPx()
-        else -> 3.dp.toPx()
+        boardSize == 9 -> 4f.dp.toPx()
+        boardSize == 13 -> 3.5f.dp.toPx()
+        boardSize == 19 -> 3f.dp.toPx()
+        else -> 3f.dp.toPx()
     }
 
-    // Calculate star point positions based on board size
     val starPoints = when (boardSize) {
-        9 -> listOf(
-            Point(2, 2), Point(6, 2), Point(4, 4), Point(2, 6), Point(6, 6)
-        )
-        13 -> listOf(
-            Point(3, 3), Point(9, 3), Point(6, 6), Point(3, 9), Point(9, 9)
-        )
+        9 -> listOf(Point(2, 2), Point(6, 2), Point(4, 4), Point(2, 6), Point(6, 6))
+        13 -> listOf(Point(3, 3), Point(9, 3), Point(6, 6), Point(3, 9), Point(9, 9))
         19 -> listOf(
             Point(3, 3), Point(9, 3), Point(15, 3),
             Point(3, 9), Point(9, 9), Point(15, 9),
@@ -153,8 +152,8 @@ private fun DrawScope.drawStarPoints(boardSize: Int, padding: Float, cellSize: F
 }
 
 private fun DrawScope.drawCoordinates(boardSize: Int, padding: Float, cellSize: Float) {
-    val labelTextSize = 10.dp.toPx()
-    val nativeCanvas: android.graphics.Canvas = drawContext.canvas.nativeCanvas
+    val labelTextSize = 10f.dp.toPx()
+    val canvas = drawContext.canvas
 
     // Draw column labels (A-T, skipping I)
     val cols = "ABCDEFGHJKLMNOPQRST"
@@ -168,10 +167,8 @@ private fun DrawScope.drawCoordinates(boardSize: Int, padding: Float, cellSize: 
             this.textAlign = android.graphics.Paint.Align.CENTER
         }
 
-        // Draw at top
-        nativeCanvas.drawText(colLabel, x, padding - 12.dp.toPx(), paint)
-        // Draw at bottom
-        nativeCanvas.drawText(colLabel, x, padding + (boardSize - 1) * cellSize + 20.dp.toPx(), paint)
+        canvas.nativeCanvas.drawText(colLabel, x, padding - 12f.dp.toPx(), paint)
+        canvas.nativeCanvas.drawText(colLabel, x, padding + (boardSize - 1) * cellSize + 20f.dp.toPx(), paint)
     }
 
     // Draw row labels (1-19)
@@ -185,10 +182,8 @@ private fun DrawScope.drawCoordinates(boardSize: Int, padding: Float, cellSize: 
             this.textAlign = android.graphics.Paint.Align.CENTER
         }
 
-        // Draw on left
-        nativeCanvas.drawText(rowLabel, padding - 12.dp.toPx(), y + labelTextSize / 3, paint)
-        // Draw on right
-        nativeCanvas.drawText(rowLabel, padding + (boardSize - 1) * cellSize + 12.dp.toPx(), y + labelTextSize / 3, paint)
+        canvas.nativeCanvas.drawText(rowLabel, padding - 12f.dp.toPx(), y + labelTextSize / 3f, paint)
+        canvas.nativeCanvas.drawText(rowLabel, padding + (boardSize - 1) * cellSize + 12f.dp.toPx(), y + labelTextSize / 3f, paint)
     }
 }
 
@@ -204,80 +199,46 @@ private fun DrawScope.drawStone(
     val x = padding + placement.point.x * cellSize
     val y = padding + placement.point.y * cellSize
     val radius = cellSize * 0.45f
+    val highlightWidth = 3f.dp.toPx()
 
     // Stone shadow
     drawCircle(
         color = Color(0x40000000),
         radius = radius,
-        center = Offset(x + 2.dp.toPx(), y + 2.dp.toPx())
+        center = Offset(x + 2f.dp.toPx(), y + 2f.dp.toPx())
     )
 
-    // Main stone
     when (placement.color) {
         Stone.BLACK -> {
-            drawCircle(
-                color = BlackStone,
-                radius = radius,
-                center = Offset(x, y)
-            )
-            // Highlight
+            drawCircle(color = BlackStone, radius = radius, center = Offset(x, y))
             if (isHighlighted || isWrong || isCorrect) {
-                drawCircle(
-                    color = when {
-                        isWrong -> IncorrectRed
-                        isCorrect -> CorrectGreen
-                        else -> HintBlue
-                    },
-                    radius = radius,
-                    center = Offset(x, y),
-                    style = Stroke(width = 3.dp.toPx())
-                )
+                val highlightColor = when {
+                    isWrong -> IncorrectRed
+                    isCorrect -> CorrectGreen
+                    else -> HintBlue
+                }
+                drawCircle(color = highlightColor, radius = radius, center = Offset(x, y), style = Stroke(width = highlightWidth))
             }
-            // Last move marker
             if (isLastMove) {
-                drawCircle(
-                    color = Color.White,
-                    radius = radius * 0.3f,
-                    center = Offset(x, y)
-                )
+                drawCircle(color = Color.White, radius = radius * 0.3f, center = Offset(x, y))
             }
         }
         Stone.WHITE -> {
-            drawCircle(
-                color = WhiteStone,
-                radius = radius,
-                center = Offset(x, y)
-            )
-            // Stone border
-            drawCircle(
-                color = WhiteStoneShadow,
-                radius = radius,
-                center = Offset(x, y),
-                style = Stroke(width = 1.dp.toPx())
-            )
-            // Highlight
+            drawCircle(color = WhiteStone, radius = radius, center = Offset(x, y))
+            drawCircle(color = WhiteStoneShadow, radius = radius, center = Offset(x, y), style = Stroke(width = 1f.dp.toPx()))
             if (isHighlighted || isWrong || isCorrect) {
-                drawCircle(
-                    color = when {
-                        isWrong -> IncorrectRed
-                        isCorrect -> CorrectGreen
-                        else -> HintBlue
-                    },
-                    radius = radius,
-                    center = Offset(x, y),
-                    style = Stroke(width = 3.dp.toPx())
-                )
+                val highlightColor = when {
+                    isWrong -> IncorrectRed
+                    isCorrect -> CorrectGreen
+                    else -> HintBlue
+                }
+                drawCircle(color = highlightColor, radius = radius, center = Offset(x, y), style = Stroke(width = highlightWidth))
             }
-            // Last move marker
             if (isLastMove) {
-                drawCircle(
-                    color = BlackStone,
-                    radius = radius * 0.3f,
-                    center = Offset(x, y)
-                )
+                drawCircle(color = BlackStone, radius = radius * 0.3f, center = Offset(x, y))
             }
         }
-        Stone.EMPTY -> { }
+        Stone.EMPTY -> {}
     }
 }
 
@@ -285,25 +246,24 @@ private fun calculatePointFromOffset(
     offset: Offset,
     width: Float,
     height: Float,
-    boardSize: Int
+    boardSize: Int,
+    density: Float
 ): Point? {
-    val padding = 32.dp.toPx()
+    val padding = 32f * density
     val boardAreaSize = min(width, height) - padding * 2
     val cellSize = boardAreaSize / (boardSize - 1)
 
-    val x = ((offset.x - padding + cellSize / 2) / cellSize).toInt()
-    val y = ((offset.y - padding + cellSize / 2) / cellSize).toInt()
+    val x = ((offset.x - padding + cellSize / 2f) / cellSize).toInt()
+    val y = ((offset.y - padding + cellSize / 2f) / cellSize).toInt()
 
     val point = Point(x, y)
     if (!point.isValid(boardSize)) return null
 
-    // Check if the touch is close enough to the intersection
     val exactX = padding + x * cellSize
     val exactY = padding + y * cellSize
-    val distance = kotlin.math.sqrt(
-        (offset.x - exactX) * (offset.x - exactX) +
-        (offset.y - exactY) * (offset.y - exactY)
-    )
+    val dx = offset.x - exactX
+    val dy = offset.y - exactY
+    val distance = sqrt(dx * dx + dy * dy)
 
     return if (distance < cellSize * 0.6f) point else null
 }

@@ -149,7 +149,7 @@ class PuzzleViewModel : ViewModel() {
                         it.copy(
                             isComplete = true,
                             isCorrect = false,
-                            wrongMove = point,
+                            wrongMove = move,
                             feedbackMessage = "错误，请重试"
                         )
                     }
