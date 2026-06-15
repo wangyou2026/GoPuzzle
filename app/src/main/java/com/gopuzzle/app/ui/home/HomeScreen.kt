@@ -16,12 +16,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.gopuzzle.app.data.repository.PuzzleRepository
 import com.gopuzzle.app.domain.model.PuzzleCategory
 import com.gopuzzle.app.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    repository: PuzzleRepository,
     onNavigateToSelect: (String) -> Unit,
     onNavigateToPuzzle: (String) -> Unit
 ) {

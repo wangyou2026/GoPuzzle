@@ -24,10 +24,10 @@ import com.gopuzzle.app.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PuzzleScreen(
+    viewModel: PuzzleViewModel,
     puzzleId: String,
     onBack: () -> Unit,
-    onNextPuzzle: (String) -> Unit,
-    viewModel: PuzzleViewModel = viewModel()
+    onNextPuzzle: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

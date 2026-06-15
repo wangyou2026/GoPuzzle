@@ -1,10 +1,54 @@
 package com.gopuzzle.app.data.repository
 
+import android.content.Context
+import com.gopuzzle.app.data.sgf.SgfParser
 import com.gopuzzle.app.domain.model.*
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
-class PuzzleRepository {
-    private val puzzles = SamplePuzzles.getAll()
+class PuzzleRepository(private val context: Context? = null) {
+    private val puzzles by lazy { loadAllPuzzles() }
     private val progressMap = mutableMapOf<String, PuzzleProgress>()
+
+    private fun loadAllPuzzles(): List<Puzzle> {
+        val allPuzzles = mutableListOf<Puzzle>()
+
+        allPuzzles.addAll(SamplePuzzles.getAll())
+
+        loadSgfPuzzles().let { allPuzzles.addAll(it) }
+
+        return allPuzzles
+    }
+
+    private fun loadSgfPuzzles(): List<Puzzle> {
+        if (context == null) return emptyList()
+
+        return try {
+            val parser = SgfParser()
+            val puzzles = mutableListOf<Puzzle>()
+
+            val assetManager = context.assets
+            val files = assetManager.list("puzzles") ?: emptyArray()
+
+            files.filter { it.endsWith(".sgf") }.forEach { filename ->
+                try {
+                    val inputStream = assetManager.open("puzzles/$filename")
+                    val reader = BufferedReader(InputStreamReader(inputStream))
+                    val content = reader.readText()
+                    reader.close()
+
+                    val parsedPuzzles = parser.parse(content)
+                    puzzles.addAll(parsedPuzzles)
+                } catch (e: Exception) {
+                    // Ignore single file errors
+                }
+            }
+
+            puzzles
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
     fun getAllPuzzles(): List<Puzzle> = puzzles
 
@@ -46,7 +90,6 @@ class PuzzleRepository {
         }
     }
 
-    // Progress management
     fun getProgress(puzzleId: String): PuzzleProgress? = progressMap[puzzleId]
 
     fun saveProgress(progress: PuzzleProgress) {
@@ -103,7 +146,6 @@ class PuzzleRepository {
         return puzzles.filter { progressMap[it.id]?.isSolved == true }
     }
 
-    // Statistics
     fun getStatistics(): PuzzleStatistics {
         val total = puzzles.size
         val solved = progressMap.values.count { it.isSolved }

@@ -32,15 +32,14 @@ data class PuzzleUiState(
     val error: String? = null
 )
 
-class PuzzleViewModel : ViewModel() {
-    private val repository = PuzzleRepository()
+class PuzzleViewModel(private val repository: PuzzleRepository = PuzzleRepository()) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PuzzleUiState())
     val uiState: StateFlow<PuzzleUiState> = _uiState.asStateFlow()
 
     private var gameEngine: GameEngine? = null
-    private var solutionNode: MoveNode? = null
-    private var currentNode: MoveNode? = null
+    private var solutionPath: List<Move> = emptyList()
+    private var currentMoveIndex: Int = 0
 
     fun loadPuzzle(puzzleId: String) {
         viewModelScope.launch {
@@ -53,15 +52,12 @@ class PuzzleViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Initialize board with initial stones
                 val board = Board.fromStones(puzzle.boardSize, puzzle.initialStones)
                 gameEngine = GameEngine(board)
 
-                // Get solution tree root
-                solutionNode = puzzle.solutionTree
-                currentNode = solutionNode
+                solutionPath = extractSolutionPath(puzzle.solutionTree)
+                currentMoveIndex = 0
 
-                // Get progress
                 val progress = repository.getProgress(puzzleId)
 
                 _uiState.update {
@@ -90,33 +86,32 @@ class PuzzleViewModel : ViewModel() {
         }
     }
 
+    private fun extractSolutionPath(node: MoveNode?): List<Move> {
+        val path = mutableListOf<Move>()
+        var current = node
+        while (current != null && current.move != null) {
+            path.add(current.move!!)
+            current = current.children.firstOrNull()
+        }
+        return path
+    }
+
     fun onStoneClick(point: Point) {
         val state = _uiState.value
         if (state.isComplete || state.puzzle == null || gameEngine == null) return
 
         val move = Move(point, state.currentPlayer)
 
-        // Try to play the move
         val result = gameEngine!!.playMove(move)
 
         when (result) {
             is MoveResult.Success -> {
-                // Update stones
                 val newStones = state.currentBoard!!.getAllStones()
 
-                // Check if this move matches the solution
-                val expectedNode = findExpectedMove(currentNode, state.currentPlayer)
+                if (isCorrectMove(move)) {
+                    currentMoveIndex++
 
-                if (expectedNode != null && expectedNode.move == move) {
-                    // Correct move
-                    currentNode = expectedNode
-
-                    // Check if puzzle is complete
-                    val isPuzzleComplete = expectedNode.isCorrect &&
-                        (expectedNode.children.isEmpty() ||
-                         expectedNode.children.all { !it.isCorrect })
-
-                    if (isPuzzleComplete) {
+                    if (currentMoveIndex >= solutionPath.size) {
                         repository.markAsSolved(state.puzzle.id)
                         _uiState.update {
                             it.copy(
@@ -143,7 +138,6 @@ class PuzzleViewModel : ViewModel() {
                         }
                     }
                 } else {
-                    // Wrong move
                     repository.markAsWrong(state.puzzle.id)
                     _uiState.update {
                         it.copy(
@@ -156,7 +150,6 @@ class PuzzleViewModel : ViewModel() {
                 }
             }
             is MoveResult.Invalid -> {
-                // Invalid move (suicide, ko, occupied, etc.)
                 _uiState.update {
                     it.copy(feedbackMessage = result.reason)
                 }
@@ -164,28 +157,24 @@ class PuzzleViewModel : ViewModel() {
         }
     }
 
-    private fun findExpectedMove(node: MoveNode?, player: Stone): MoveNode? {
-        if (node == null) return null
-
-        // Check children for the expected move of this player
-        for (child in node.children) {
-            if (child.move?.color == player) {
-                return child
-            }
-        }
-        return null
+    private fun isCorrectMove(move: Move): Boolean {
+        if (currentMoveIndex >= solutionPath.size) return false
+        
+        val expectedMove = solutionPath[currentMoveIndex]
+        return move.point == expectedMove.point && move.color == expectedMove.color
     }
 
     fun showHint() {
         val state = _uiState.value
         if (state.isComplete) return
 
-        val expectedNode = findExpectedMove(currentNode, state.currentPlayer)
-        _uiState.update {
-            it.copy(
-                showHint = true,
-                hintMove = expectedNode?.move
-            )
+        if (currentMoveIndex < solutionPath.size) {
+            _uiState.update {
+                it.copy(
+                    showHint = true,
+                    hintMove = solutionPath[currentMoveIndex]
+                )
+            }
         }
     }
 
@@ -199,16 +188,8 @@ class PuzzleViewModel : ViewModel() {
         val state = _uiState.value
         if (state.isComplete) return
 
-        // Collect all moves in the solution path
-        val solutionMoves = mutableListOf<Move>()
-        var node = solutionNode
-        while (node != null) {
-            node.move?.let { solutionMoves.add(it) }
-            node = node.children.firstOrNull { it.isCorrect }
-        }
-
         _uiState.update {
-            it.copy(showAnswer = true, answerMoves = solutionMoves)
+            it.copy(showAnswer = true, answerMoves = solutionPath)
         }
     }
 
@@ -223,7 +204,7 @@ class PuzzleViewModel : ViewModel() {
 
         val board = Board.fromStones(puzzle.boardSize, puzzle.initialStones)
         gameEngine = GameEngine(board)
-        currentNode = solutionNode
+        currentMoveIndex = 0
 
         _uiState.update {
             it.copy(
@@ -248,11 +229,9 @@ class PuzzleViewModel : ViewModel() {
         val state = _uiState.value
         if (state.moveHistory.isEmpty()) return
 
-        // Reset and replay all moves except the last one
         val puzzle = state.puzzle ?: return
         val board = Board.fromStones(puzzle.boardSize, puzzle.initialStones)
         gameEngine = GameEngine(board)
-        currentNode = solutionNode
 
         val movesToReplay = state.moveHistory.dropLast(1)
         var stones = puzzle.initialStones
@@ -260,10 +239,9 @@ class PuzzleViewModel : ViewModel() {
         for (move in movesToReplay) {
             gameEngine!!.playMove(move)
             stones = board.getAllStones()
-
-            // Advance to correct child
-            currentNode = currentNode?.children?.find { it.move == move } ?: currentNode
         }
+
+        currentMoveIndex = movesToReplay.size
 
         _uiState.update {
             it.copy(

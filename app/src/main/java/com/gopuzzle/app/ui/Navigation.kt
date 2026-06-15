@@ -6,9 +6,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.gopuzzle.app.GoPuzzleApplication
 import com.gopuzzle.app.ui.home.HomeScreen
 import com.gopuzzle.app.ui.puzzle.PuzzleScreen
+import com.gopuzzle.app.ui.puzzle.PuzzleViewModel
 import com.gopuzzle.app.ui.select.PuzzleSelectScreen
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -23,6 +27,7 @@ sealed class Screen(val route: String) {
 @Composable
 fun GoPuzzleNavHost() {
     val navController = rememberNavController()
+    val context = LocalContext.current.applicationContext as GoPuzzleApplication
 
     NavHost(
         navController = navController,
@@ -30,6 +35,7 @@ fun GoPuzzleNavHost() {
     ) {
         composable(Screen.Home.route) {
             HomeScreen(
+                repository = context.puzzleRepository,
                 onNavigateToSelect = { category ->
                     navController.navigate(Screen.Select.createRoute(category))
                 },
@@ -47,6 +53,7 @@ fun GoPuzzleNavHost() {
         ) { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category") ?: ""
             PuzzleSelectScreen(
+                repository = context.puzzleRepository,
                 category = category,
                 onPuzzleSelected = { puzzleId ->
                     navController.navigate(Screen.Puzzle.createRoute(puzzleId))
@@ -63,6 +70,7 @@ fun GoPuzzleNavHost() {
         ) { backStackEntry ->
             val puzzleId = backStackEntry.arguments?.getString("puzzleId") ?: ""
             PuzzleScreen(
+                viewModel = PuzzleViewModel(context.puzzleRepository),
                 puzzleId = puzzleId,
                 onBack = { navController.popBackStack() },
                 onNextPuzzle = { nextPuzzleId ->

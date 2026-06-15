@@ -1,0 +1,50 @@
+(;GM[1]FF[4]CA[UTF-8]SZ[9]
+;B[aa]W[ab]B[ba]W[bb]B[bc]W[ac]B[cc]W[ad]C[吴清源诘棋 - 第一题: 黑先做活]
+(;B[bd]C[正解])
+(;W[cd]B[ce]C[变化])
+)
+(;GM[1]FF[4]CA[UTF-8]SZ[9]
+;B[ab]W[aa]B[ba]W[bb]B[ca]W[bc]B[cb]W[cc]C[吴清源诘棋 - 第二题: 黑先做活]
+(;B[bd]C[正解])
+(;W[cd]B[be]C[变化])
+)
+(;GM[1]FF[4]CA[UTF-8]SZ[9]
+;B[cc]W[bc]B[cd]W[bd]B[ce]W[de]B[cf]W[ef]C[吴清源诘棋 - 第三题: 黑先杀白]
+(;B[df]C[正解])
+(;W[cg]B[dg]C[变化])
+)
+(;GM[1]FF[4]CA[UTF-8]SZ[9]
+;B[bb]W[ab]B[bc]W[cb]B[cc]W[cd]B[bd]W[dd]C[吴清源诘棋 - 第四题: 黑先做活]
+(;B[ce]C[正解])
+(;W[bf]B[cf]C[变化])
+)
+(;GM[1]FF[4]CA[UTF-8]SZ[9]
+;B[aa]W[ab]B[ba]W[bb]B[ca]W[bc]B[db]W[cb]C[吴清源诘棋 - 第五题: 黑先杀白]
+(;B[dc]C[正解])
+(;W[dd]B[ec]C[变化])
+)
+(;GM[1]FF[4]CA[UTF-8]SZ[9]
+;B[cc]W[bc]B[cd]W[bd]B[ce]W[de]B[df]W[ef]C[吴清源诘棋 - 第六题: 黑先做活]
+(;B[cg]C[正解])
+(;W[ch]B[dh]C[变化])
+)
+(;GM[1]FF[4]CA[UTF-8]SZ[9]
+;B[bb]W[ab]B[bc]W[cb]B[cc]W[cd]B[dd]W[bd]C[吴清源诘棋 - 第七题: 黑先杀白]
+(;B[ce]C[正解])
+(;W[cf]B[df]C[变化])
+)
+(;GM[1]FF[4]CA[UTF-8]SZ[9]
+;B[aa]W[ab]B[ba]W[bb]B[ca]W[ac]B[da]W[bc]C[吴清源诘棋 - 第八题: 黑先做活]
+(;B[db]C[正解])
+(;W[dc]B[eb]C[变化])
+)
+(;GM[1]FF[4]CA[UTF-8]SZ[13]
+;B[dd]W[cd]B[de]W[ce]B[df]W[cf]B[dg]W[cg]B[dh]W[ch]C[吴清源诘棋 - 第九题: 黑先杀白]
+(;B[di]C[正解])
+(;W[dj]B[ei]C[变化])
+)
+(;GM[1]FF[4]CA[UTF-8]SZ[13]
+;B[cc]W[bc]B[cd]W[bd]B[ce]W[be]B[cf]W[bf]B[cg]W[bg]C[吴清源诘棋 - 第十题: 黑先做活]
+(;B[ch]C[正解])
+(;W[ci]B[dh]C[变化])
+)

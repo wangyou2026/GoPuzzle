@@ -21,11 +21,11 @@ import com.gopuzzle.app.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PuzzleSelectScreen(
+    repository: PuzzleRepository,
     category: String,
     onPuzzleSelected: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    val repository = remember { PuzzleRepository() }
 
     val puzzles = remember(category) {
         when (category) {
@@ -121,6 +121,7 @@ fun PuzzleSelectScreen(
                         }
                         items(difficultyPuzzles) { puzzle ->
                             PuzzleCard(
+                                repository = repository,
                                 puzzle = puzzle,
                                 onClick = { onPuzzleSelected(puzzle.id) }
                             )
@@ -169,10 +170,11 @@ private fun DifficultyHeader(
 
 @Composable
 private fun PuzzleCard(
+    repository: PuzzleRepository,
     puzzle: Puzzle,
     onClick: () -> Unit
 ) {
-    val progress = remember { PuzzleRepository().getProgress(puzzle.id) }
+    val progress = remember { repository.getProgress(puzzle.id) }
 
     Card(
         modifier = Modifier
