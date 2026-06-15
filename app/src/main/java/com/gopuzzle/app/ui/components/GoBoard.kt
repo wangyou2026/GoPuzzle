@@ -62,30 +62,26 @@ fun GoBoard(
         val boardAreaSize = size.width - padding * 2
         val cellSize = boardAreaSize / (boardSize - 1)
 
-        // Draw board background (wood texture effect)
         drawRect(
             color = BoardBackground,
             topLeft = Offset(padding - 8.dp.toPx(), padding - 8.dp.toPx()),
             size = androidx.compose.ui.geometry.Size(boardAreaSize + 16.dp.toPx(), boardAreaSize + 16.dp.toPx())
         )
 
-        // Draw grid lines
         drawGrid(boardSize, padding, cellSize)
 
-        // Draw star points
         drawStarPoints(boardSize, padding, cellSize)
 
-        // Draw coordinates
         if (showCoordinates) {
             drawCoordinates(boardSize, padding, cellSize)
         }
 
-        // Draw stones
         stones.forEach { placement ->
             drawStone(
                 placement = placement,
                 padding = padding,
                 cellSize = cellSize,
+                boardSize = boardSize,
                 isHighlighted = placement.point in highlightedPoints,
                 isWrong = placement.point == wrongPoint,
                 isCorrect = placement.point == correctPoint,
@@ -142,7 +138,7 @@ private fun DrawScope.drawStarPoints(boardSize: Int, padding: Float, cellSize: F
 
     starPoints.forEach { point ->
         val x = padding + point.x * cellSize
-        val y = padding + point.y * cellSize
+        val y = padding + (boardSize - 1 - point.y) * cellSize
         drawCircle(
             color = Color(0xFF8B4513),
             radius = starPointRadius,
@@ -155,7 +151,6 @@ private fun DrawScope.drawCoordinates(boardSize: Int, padding: Float, cellSize: 
     val labelTextSize = 10f.dp.toPx()
     val canvas = drawContext.canvas
 
-    // Draw column labels (A-T, skipping I)
     val cols = "ABCDEFGHJKLMNOPQRST"
     for (i in 0 until min(boardSize, 19)) {
         val x = padding + i * cellSize
@@ -171,7 +166,6 @@ private fun DrawScope.drawCoordinates(boardSize: Int, padding: Float, cellSize: 
         canvas.nativeCanvas.drawText(colLabel, x, padding + (boardSize - 1) * cellSize + 20f.dp.toPx(), paint)
     }
 
-    // Draw row labels (1-19)
     for (i in 0 until min(boardSize, 19)) {
         val y = padding + i * cellSize
         val rowLabel = (boardSize - i).toString()
@@ -191,17 +185,17 @@ private fun DrawScope.drawStone(
     placement: StonePlacement,
     padding: Float,
     cellSize: Float,
+    boardSize: Int,
     isHighlighted: Boolean,
     isWrong: Boolean,
     isCorrect: Boolean,
     isLastMove: Boolean
 ) {
     val x = padding + placement.point.x * cellSize
-    val y = padding + placement.point.y * cellSize
+    val y = padding + (boardSize - 1 - placement.point.y) * cellSize
     val radius = cellSize * 0.45f
     val highlightWidth = 3f.dp.toPx()
 
-    // Stone shadow
     drawCircle(
         color = Color(0x40000000),
         radius = radius,
@@ -254,13 +248,14 @@ private fun calculatePointFromOffset(
     val cellSize = boardAreaSize / (boardSize - 1)
 
     val x = ((offset.x - padding + cellSize / 2f) / cellSize).toInt()
-    val y = ((offset.y - padding + cellSize / 2f) / cellSize).toInt()
+    val rawY = ((offset.y - padding + cellSize / 2f) / cellSize).toInt()
+    val y = boardSize - 1 - rawY
 
     val point = Point(x, y)
     if (!point.isValid(boardSize)) return null
 
     val exactX = padding + x * cellSize
-    val exactY = padding + y * cellSize
+    val exactY = padding + (boardSize - 1 - y) * cellSize
     val dx = offset.x - exactX
     val dy = offset.y - exactY
     val distance = sqrt(dx * dx + dy * dy)

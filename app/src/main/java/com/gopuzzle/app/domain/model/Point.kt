@@ -37,11 +37,27 @@ data class Point(
         Point(x, y + 1).takeIf { it.isValid(boardSize) }
     )
 
+    fun toBoardCoordinate(boardSize: Int): String {
+        val cols = "ABCDEFGHJKLMNOPQRST"
+        val col = cols.getOrNull(x) ?: '?'
+        val row = boardSize - y
+        return "$col$row"
+    }
+
     companion object {
         fun fromSgf(sgf: String): Point {
             val col = sgf[0].code - 'a'.code
             val row = sgf[1].code - 'a'.code
             return Point(col, row)
+        }
+
+        fun fromBoardCoordinate(coordinate: String, boardSize: Int): Point {
+            val cols = "ABCDEFGHJKLMNOPQRST"
+            val col = coordinate[0].uppercaseChar()
+            val row = coordinate.substring(1).toInt()
+            val x = cols.indexOf(col)
+            val y = boardSize - row
+            return Point(x, y)
         }
     }
 
